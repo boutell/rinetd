@@ -1,0 +1,226 @@
+<h1>rinetd: a user-mode port redirect utility</h1>
+<h3>Description</h3>
+<p>
+Redirects TCP connections from one IP address and port to another. rinetd
+is a single-process server which handles any number of connections to
+the address/port pairs specified in the file <code>/etc/rinetd.conf</code>. 
+Since rinetd runs as a single process using nonblocking I/O, it is
+able to redirect a large number of connections without a severe
+impact on the machine. This makes it practical to run TCP services
+on machines inside an IP masquerading firewall. rinetd <strong>does not
+redirect FTP,</strong> because FTP requires more than one socket.
+</p>
+<p>
+rinetd is typically launched at boot time, using the following syntax:
+</p>
+<p>
+<code>/usr/sbin/rinetd</code>
+</p>
+<p>
+The configuration file is found in the file 
+<code>/etc/rinetd.conf</code>, unless
+another file is specified using the <code>-c</code> command line option. 
+</p>
+<h3>Forwarding Rules</h3>
+<p>
+Most entries in the configuration file are forwarding rules. The
+format of a forwarding rule is as follows:
+</p>
+<pre>
+bindaddress bindport connectaddress connectport
+</pre>
+For example:
+<pre>
+206.125.69.81 80 10.1.1.2 80
+</pre>
+<p>
+Would redirect all connections to port 80 of the "real" IP address
+206.125.69.81, which could be a virtual interface, through
+rinetd to port 80 of the address 10.1.1.2, which would typically 
+be a machine on the inside of a firewall which has no
+direct routing to the outside world.
+</p>
+<p>
+Although responding on individual interfaces rather than on all
+interfaces is one of rinetd's primary features, sometimes it is 
+preferable to respond on all IP addresses that belong to the server.
+In this situation, the special IP address <code>0.0.0.0</code>
+can be used. For example:
+</p>
+<pre>
+0.0.0.0 23 10.1.1.2 23
+</pre>
+<p>
+Would redirect all connections to port 23, for all IP addresses
+assigned to the server. This is the default behavior for most
+other programs.
+</p>
+<p>
+Service names can be specified instead of port numbers. On most systems,
+service names are defined in the file /etc/services.
+</p>
+<p>
+Both IP addresses and hostnames are accepted for
+bindaddress and connectaddress.
+</p>
+<h3>Allow and Deny Rules</h3>
+<p>
+Configuration files can also contain allow and deny rules. 
+</p>
+<p>
+Allow rules which appear before the first forwarding rule are
+applied globally: if at least one global allow rule exists,
+and the address of a new connection does not
+satisfy at least one of the global allow rules, that connection
+is immediately rejected, regardless of any other rules. 
+</p>
+<p>
+Allow rules which appear after a specific forwarding rule apply 
+to that forwarding rule only. If at least one allow rule
+exists for a particular forwarding rule, and the address of a new
+connection does not satisfy at least one of the allow rules
+for that forwarding rule, that connection is immediately
+rejected, regardless of any other rules.
+</p>
+<p>
+Deny rules which appear before the first forwarding rule are
+applied globally: if the address of a new connection satisfies
+any of the global allow rules, that connection
+is immediately rejected, regardless of any other rules. 
+</p>
+<p>
+Deny rules which appear after a specific forwarding rule apply 
+to that forwarding rule only. If the address of a new
+connection satisfies any of the deny rules for that forwarding rule, 
+that connection is immediately rejected, regardless of any other rules.
+</p>
+<p>
+The format of an allow rule is as follows:
+</p>
+<pre>
+allow pattern
+</pre>
+<p>
+Patterns can contain the following characters: 0, 1, 2, 3, 4, 5,
+6, 7, 8, 9, . (period), ?, and *. The ? wildcard matches any one
+character. The * wildcard matches any number of characters, including
+zero. 
+</p>
+<p>
+For example:
+</p>
+<pre>
+allow 206.125.69.*
+</pre>
+<p>
+This allow rule matches all IP addresses in the 206.125.69 class C domain.
+</p>
+<p>
+Host names are NOT permitted in allow and deny rules. The performance
+cost of looking up IP addresses to find their corresponding names
+is prohibitive. Since rinetd is a single process server, all other
+connections would be forced to pause during the address lookup.
+</p>
+<h3>Logging</h3>
+<p>
+rinetd is able to produce a log file in either of two formats:
+tab-delimited and web server-style "common log format."
+</p>
+<p>
+By default, rinetd does not produce a log file. To activate logging, add 
+the following line to the configuration file:
+</p>
+<pre>
+logfile log-file-location
+</pre>
+<p>
+Example:
+</p>
+<pre>
+logfile /var/log/rinetd.log
+</pre>
+<p>
+By default, rinetd logs in a simple tab-delimited format containing
+the following information:
+</p>
+<p>
+Date and time<br>
+Client address<br>
+
+Listening host
+<br>
+Listening port
+<br>
+Forwarded-to host
+<br>
+Forwarded-to port
+<br>
+Bytes received from client
+<br>
+Bytes sent to client
+<br>
+Result message
+</p>
+<p>
+To activate web server-style "common log format" logging,
+add the following line to the configuration file:
+</p>
+<pre>
+logcommon
+</pre>
+<h3>Command line options</h3>
+<p>
+The -c command line option is used to specify an alternate
+configuration file.
+</p>
+<p>
+The -h command line option produces a short help message.
+</p>
+<p>
+The -v command line option displays the version number.
+</p>
+<h3>Reinitializing rinetd</h3>
+<p>
+The kill -1 signal (SIGHUP) can be used to cause rinetd
+to reload its configuration file <strong>without</strong> interrupting existing
+connections. Under Linux(tm) the process id 
+is saved in the file <code>/var/run/rinetd.pid</code>
+to facilitate the kill -HUP. An alternate
+file name can be provided by using the <code>pidlogfile</code> 
+configuration file option.
+</p>
+<h3>Bugs</h3>
+<p>
+The server redirected to is not able to identify the host the
+client really came from. This cannot be corrected; however,
+the log produced by rinetd provides a way to obtain this
+information. Under Unix, sockets would theoretically lose data when closed
+with <code>SO_LINGER</code> turned off, but in Linux this is not the case 
+(kernel source comments support this belief on my part). On non-Linux Unix
+platforms, alternate code which uses a different trick to work around 
+blocking <code>close()</code> is provided, but this code is untested.
+</p>
+<p>
+The logging is inadequate. The duration of the connection should be logged.
+</p>
+<h3>License</h3>
+<p>
+Copyright (c) 1997-2019,
+<a href="http://www.boutell.com/boutell">Thomas Boutell</a> and 
+<a href="http://www.boutell.com/">Boutell.Com, Inc.</a>
+This software is released for free use under the terms of
+the GNU General Public License, version 2 or higher.
+</p>
+<h3>Contact Information</h3>
+<p>
+See <a href="http://www.boutell.com/rinetd">the rinetd web page</a> 
+for the latest release.
+Feel free to <a href="http://www.boutell.com/contact">contact us</a>.
+</p>
+<h3>Thanks</h3>
+<p>
+  Thanks are due to Bill Davidsen, Libor Pechachek, Sascha Ziemann, 
+  Joel S. Noble, the Apache Group, and many others who have contributed 
+  advice, encouragement and/or source code to this and other open 
+  software projects.
+</p>
