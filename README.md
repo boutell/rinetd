@@ -205,17 +205,9 @@ The logging is inadequate. The duration of the connection should be logged.
 </p>
 <h3>License</h3>
 <p>
-Copyright (c) 1997-2019,
-<a href="http://www.boutell.com/boutell">Thomas Boutell</a> and 
-<a href="http://www.boutell.com/">Boutell.Com, Inc.</a>
+Copyright (c) 1997-2019 Thomas Boutell.
 This software is released for free use under the terms of
 the GNU General Public License, version 2 or higher.
-</p>
-<h3>Contact Information</h3>
-<p>
-See <a href="http://www.boutell.com/rinetd">the rinetd web page</a> 
-for the latest release.
-Feel free to <a href="http://www.boutell.com/contact">contact us</a>.
 </p>
 <h3>Thanks</h3>
 <p>
