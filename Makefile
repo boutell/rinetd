@@ -1,7 +1,8 @@
 CFLAGS=-DLINUX -g
 
+
 rinetd: rinetd.o match.o
-	gcc rinetd.o match.o -o rinetd
+	$(CC) rinetd.o match.o -o rinetd
 
 install: rinetd
 	install -m 700 rinetd /usr/sbin
