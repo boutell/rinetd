@@ -646,6 +646,11 @@ void readConfiguration(void)
 			}
 		}
 	}
+	if (i<seTotal) {
+		fprintf (stderr, "rinetd: only %d of the %d server(s) could be opened.\n",
+			i, seTotal);
+		seTotal= i;
+	}
 	/* Open the log file */
 	if (logFile) {
 		fclose(logFile);
