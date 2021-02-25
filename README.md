@@ -1,4 +1,5 @@
-<h1>rinetd: a user-mode port redirect utility</h1>
+# OBSOLETE! THIS REPO IS ARCHIVED, USE [Sam Hocevar's lovely and well-maintained version](https://github.com/samhocevar/rinetd). Thanks!
+
 <h3>Description</h3>
 <p>
 Redirects TCP connections from one IP address and port to another. rinetd
